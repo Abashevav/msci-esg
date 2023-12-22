@@ -5,7 +5,7 @@ RSpec.describe Msci::Esg do
     expect(Msci::Esg::VERSION).not_to be nil
   end
 
-  it "does something useful" do
-    expect(false).to eq(true)
+  it "bad auth" do
+    expect(Msci::Esg::DataAPI.new("AA", "BB").auth).not_to be nil
   end
 end
