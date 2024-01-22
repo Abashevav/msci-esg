@@ -1,9 +1,15 @@
 AllCops:
-  TargetRubyVersion: 2.0
+  TargetRubyVersion: 2.X
 
 Style/StringLiterals:
   Enabled: true
   EnforcedStyle: double_quotes
+
+Style/IfUnlessModifier:
+  Enabled: false
+
+Style/AccessorGrouping:
+  Enabled: false
 
 Style/StringLiteralsInInterpolation:
   Enabled: true
@@ -20,3 +26,6 @@ Metrics/MethodLength:
 
 Metrics/AbcSize:
   CountRepeatedAttributes: false
+
+Metrics/ParameterLists:
+  MaxOptionalParameters: 5

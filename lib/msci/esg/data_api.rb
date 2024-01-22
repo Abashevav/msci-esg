@@ -1,71 +1,234 @@
 # frozen_string_literal: true
 
-require "net/http"
 require "json"
 
 module Msci
   module Esg
-    class AuthError < RuntimeError; end
+    class DataAPIError < RuntimeError; end
 
     # this class will be work with ESG Data API v2
-    class DataAPI
-      API_VERSION = "/v2"
-      BASE_PATH = "https://api.msci.com/esg/report"
+    class DataAPI < BaseAPI
+      include ParameterValues
+      include Metadata
+
+      API_VERSION = "v2.0"
+      BASE_PATH = "https://api.msci.com/esg/data"
+
+      attr_accessor :api_path, :factor_name_list, :category_path_list, :product_name_list
+      attr_accessor :index_identifier_list, :esg_industry_id_list, :gics_subindustry_id_list, :country_code_list
+      attr_accessor :fund_lipper_global_class_list, :fund_domicile_list, :fund_asset_universe_list, :fund_asset_class_list
+
+      # External parameters
+      #   `product_name_list`  (array[string] | empty)
+      #       This parameter is a list of one or more product names which contain groups of data factors.
+      #       Data factors are grouped by category as well as by product name. A product name is used
+      #       to identify a product to which a data factor must belong in order to be returned.
+      #       The list of products available to the caller can be found via the `factor_product_names` function.
+      #   `category_path_list`  (array[string] | empty)
+      #       This parameter is a list of one or more category path strings.
+      #       A category path is used to identify a collection of data factors.
+      #       All category paths available to the caller can be obtained from the `factor_category_paths` function.
+      #   `factor_name_list`  (array[string] | empty)
+      #       This is a list of factor names. A factor name is used to identify a unique data point
+      #       value associated with an issuer. A full list of available factors for the caller can be
+      #       found by using the `factors` function.
+      #   `index_identifier_list` (array[string] | empty)
+      #       A collection of index identifiers compatible with MSCI ESG Manager.
+      #       An index identifier is a string value which identifies an index to use for a query.
+      #       Indexes are used to limit the results of a request to a specific set of issuers that
+      #       belong to the specified index. A full list of indexes that are available to the caller
+      #       can be retrieved at /parameterValues/indexes
+      #   `esg_industry_id_list` (array[string] | empty)
+      #       This parameter is a list of one or more ESG Industry codes.
+      #       The issuers returned will be limited to those belonging to the specified ESG Industries.
+      #       The ESG Industry ID is a string value that identifies an ESG Industry.
+      #       A full list of available ESG Industries can be retrieved from the `industries` function
+      #   `gics_subindustry_id_list` (array[string] | empty)
+      #       This parameter is a list of one or more gics subindustry codes.
+      #       The issuers returned will be limited to those belonging to the specified GICS Sub Industries.
+      #       A GICS SubIndustry code is a string value which is used to identify a particular GICS
+      #       SubIndustry. A full list of GICS SubIndustries is available from the `subindustries` function.
+      #   `country_code_list` (array[string] | empty)
+      #       This parameter contains a list of one or more country codes which is associated with the issuer.
+      #       A Country Code is the 2 character code representing a country.
+      #   `fund_lipper_global_class_list` (array[string] | empty)
+      #       This parameter contains a list of one or more fund lipper global class names.
+      #       The available names can be determined by first issuing a request to the `fund_lipper_global_classes` function.
+      #       Names from that list may be used in this query to limit results to funds located
+      #       in the specified Lipper global classes.
+      #   `fund_domicile_list` (array[string] | empty)
+      #       This parameter contains a list of one or more fund domicile names.
+      #       The available domicile names can be determined by first issuing a request to the `fund_domiciles` function.
+      #       Names from that list may be used in this query to limit results to funds located in the specified
+      #       domiciles. A Country Code is the 2 character code representing a country.
+      #   `fund_asset_universe_list` (array[string] | empty)
+      #       This parameter contains a list of one or more fund asset universe names.
+      #       The available fund asset universe names can be determined by first issuing a request to the `fund_asset_universes` function.
+      #       Names from that list may be used in this query to limit results to funds located in the specified fund
+      #       asset universes. A GICS SubIndustry code is a string value which is used to identify a
+      #       particular GICS SubIndustry. A full list of GICS SubIndustries is available from the `subindustries` function.
+      #   `fund_asset_class_list` (array[string] | empty)
+      #       This parameter contains a list of one or more fund asset class names.
+      #       The available fund asset class names can be determined by first issuing a request to the `fund_asset_classes` function.
+      #       Names from that list may be used in this query to limit results to funds located in the
+      #       specified fund asset classes. The ESG Industry ID is a string value that identifies an ESG Industry.
+      #       A full list of available ESG Industries can be retrieved from the `industries` function.
 
       def initialize(client_id, secret_key)
-        @client_id = client_id
-        @secret_key = secret_key
+        super(client_id, secret_key)
+        @audience = "https://esg/data"
+        @api_path = BASE_PATH + "/".to_s + API_VERSION
 
-        @token = nil
+        @factor_name_list = []
+        @category_path_list = []
+        @product_name_list = []
       end
 
-      def self.execute(function)
-        res = get(BASE_PATH + API_VERSION + function)
-        puts res.body
-        true
+      def clear_params
+        @factor_name_list = nil
+        @category_path_list = nil
+        @product_name_list = nil
+        @index_identifier_list = nil
+        @esg_industry_id_list = nil
+        @gics_subindustry_id_list = nil
+        @country_code_list = nil
+        @fund_lipper_global_class_list = nil
+        @fund_domicile_list = nil
+        @fund_asset_universe_list = nil
+        @fund_asset_class_list = nil
       end
 
-      def auth
-        res = post(
-          "https://accounts.msci.com/oauth/token",
-          {
-            "client_id" => @client_id,
-            "client_secret" => @secret_key,
-            "grant_type" => "client_credentials",
-            "audience" => "https://esg/report"
-          }
+      # FUNCTION - issuers()
+      # This endpoint is used to retrieve factor data based on the parameters given in the request.
+      # The results are governed by the data points and issuer coverage permissioned to the account.
+      # This request allows the caller to specify which data they want to retrieve,
+      # and from which 'universe' of companies.
+      #
+      # PARAMS
+      #
+      # Default params:
+      #   `format` = "json"
+      #   `coverage` = "esg_ratings"
+      #   `parent_child` = "do_not_apply"
+      #   `reference_column_list` = nil
+      #   `issuer_identifier_type` = nil
+      # Optional params:
+      #   `name_contains` (string | nil)
+      #       The name_matches string is used to locate issuers whose primary issuer name value contains the given string anywhere in the name.
+      #   `starts_with` (string | nil)
+      #       Limit the primary issuer to a name that starts with the specified value.
+      #   `issuer_identifier_list` (array[string] | empty)
+      #       This parameter is used to limit the results to a specific set of issuers. 
+      #       The caller can list one or more issuer identifiers which identified the issuers for 
+      #       which data should be returned.
+      #   `offset` (int32 | 0)
+      #       The Data API has the potential to generate large amounts of data.
+      #       The offset value indicates which record to start retrieving values.
+      #   `limit` (int32 | 100)
+      #       The Data API has the potential to generate large amounts of data.
+      #       The limit value indicates the maximum number of records to return
+      def issuers(
+        name_contains: nil,
+        starts_with: nil,
+        issuer_identifier_list: [],
+        offset: 0,
+        limit: 100
+      )
+        params = {
+          "format" => "json",
+          "coverage" => "esg_ratings",
+          "parent_child" => "do_not_apply",
+          "offset" => offset.to_i,
+          "limit" => limit.to_i,
+        }
+        params["name_contains"] = name_contains unless name_contains.nil?
+        params["starts_with"] = starts_with unless starts_with.nil?
+        params["issuer_identifier_list"] = issuer_identifier_list unless issuer_identifier_list.empty?
+        params = params.merge(_check_params)
+
+        request = Msci::Esg::Request.get(
+          get_full_path(@api_path, "/issuers", params),
+          @token
         )
-        puts res.body
+        result = get_result(request)
+        return [] if result["issuers"].nil?
 
-        response = JSON.parse(res.body)
-        return response["error_description"] if response["error"]
+        result["issuers"]
+      end
 
-        true
+      # FUNCTION - funds()
+      # This endpoint is used to retrieve a set of funds, containing factor data for each fund,
+      # based on the parameters given in the request. The results are governed by the data points
+      # and fund coverage permissioned to the account. This request allows the caller to specify
+      # which data they want to retrieve, and from which 'universe' of funds the results should come from.
+      #
+      # PARAMS
+      #
+      # Default params:
+      #   `format` = "json"
+      #   `fund_metrics_coverage_only` = "true"
+      #   `fund_identifier_type` = nil
+      # Optional params:
+      #   `name_contains` (string | nil)
+      #       The name_matches string is used to locate issuers whose primary issuer name value contains the given string anywhere in the name.
+      #   `starts_with` (string | nil)
+      #       Limit the primary issuer to a name that starts with the specified value.
+      #   `fund_identifier_list` (array[string] | empty)
+      #       This parameter is used to limit the results to a specific set of issuers. 
+      #       The caller can list one or more issuer identifiers which identified the issuers 
+      #       for which data should be returned.
+      #   `offset` (int32 | 0)
+      #       The Data API has the potential to generate large amounts of data.
+      #       The offset value indicates which record to start retrieving values.
+      #   `limit` (int32 | 100)
+      #       The Data API has the potential to generate large amounts of data.
+      #       The limit value indicates the maximum number of records to return
+      def funds(
+        name_contains: nil,
+        starts_with: nil,
+        fund_identifier_list: [],
+        offset: 0,
+        limit: 100
+      )
+        params = {
+          "format" => "json",
+          "fund_metrics_coverage_only" => true,
+          "offset" => offset.to_i,
+          "limit" => limit.to_i,
+        }
+        params["name_contains"] = name_contains unless name_contains.nil?
+        params["starts_with"] = starts_with unless starts_with.nil?
+        params["fund_identifier_list"] = fund_identifier_list unless fund_identifier_list.empty?
+        params = params.merge(_check_params)
+
+        request = Msci::Esg::Request.get(
+          get_full_path(@api_path, "/funds", params),
+          @token
+        )
+        result = get_result(request)
+        return [] if result["funds"].nil?
+
+        result["funds"]
       end
 
       private
 
-      def post(uri, body)
-        uri = URI.parse(uri)
-        https = Net::HTTP.new(uri.host, uri.port)
-        https.use_ssl = true
+      def _check_params
+        params = {}
+        params["index_identifier_list"] = @index_identifier_list unless @index_identifier_list.nil?
+        params["esg_industry_id_list"] = @esg_industry_id_list unless @esg_industry_id_list.nil?
+        params["gics_subindustry_id_list"] = @gics_subindustry_id_list unless @gics_subindustry_id_list.nil?
+        params["country_code_list"] = @country_code_list unless @country_code_list.nil?
 
-        req = Net::HTTP::Post.new(uri.path)
-        req.body = body.to_json
-        req["Content-Type"] = "application/json"
+        params["fund_lipper_global_class_list"] = @fund_lipper_global_class_list unless @fund_lipper_global_class_list.nil?
+        params["fund_domicile_list"] = @fund_domicile_list unless @fund_domicile_list.nil?
+        params["fund_asset_universe_list"] = @fund_asset_universe_list unless @fund_asset_universe_list.nil?
+        params["fund_asset_class_list"] = @fund_asset_class_list unless @fund_asset_class_list.nil?
 
-        https.request(req)
-      end
-
-      def get(uri)
-        uri = URI.parse(uri)
-        https = Net::HTTP.new(uri.host, uri.port)
-        https.use_ssl = true
-
-        req = Net::HTTP::Get.new(uri.path)
-        req["Content-Type"] = "application/json"
-        req["Authorization"] = "Bearer #{@token}"
-        http.request(req)
+        params["factor_name_list"] = @factor_name_list unless @factor_name_list.nil?
+        params["category_path_list"] = @category_path_list unless @category_path_list.nil?
+        params["product_name_list"] = @product_name_list unless @product_name_list.nil?
+        params
       end
     end
   end
