@@ -24,4 +24,7 @@ jobs:
         ruby-version: ${{ matrix.ruby }}
         bundler-cache: true
     - name: Run the default task
+      env:
+        MSCI_API_CLIENT_ID: ${{ secrets.MSCI_API_CLIENT_ID }}
+        MSCI_API_SECRET_ID: ${{ secrets.MSCI_API_SECRET_ID }}
       run: bundle exec rake
