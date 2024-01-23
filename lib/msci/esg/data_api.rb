@@ -17,6 +17,7 @@ module Msci
       attr_accessor :api_path, :factor_name_list, :category_path_list, :product_name_list
       attr_accessor :index_identifier_list, :esg_industry_id_list, :gics_subindustry_id_list, :country_code_list
       attr_accessor :fund_lipper_global_class_list, :fund_domicile_list, :fund_asset_universe_list, :fund_asset_class_list
+      attr_accessor :issuer_identifier_list, :fund_identifier_list, :name_contains, :starts_with
 
       # External parameters
       #   `product_name_list`  (array[string] | empty)
@@ -73,6 +74,18 @@ module Msci
       #       Names from that list may be used in this query to limit results to funds located in the
       #       specified fund asset classes. The ESG Industry ID is a string value that identifies an ESG Industry.
       #       A full list of available ESG Industries can be retrieved from the `industries` function.
+      #   `name_contains` (string | nil)
+      #       The name_matches string is used to locate issuers whose primary issuer name value contains the given string anywhere in the name.
+      #   `starts_with` (string | nil)
+      #       Limit the primary issuer to a name that starts with the specified value.
+      #   `issuer_identifier_list` (array[string] | empty)
+      #       This parameter is used to limit the results to a specific set of issuers.
+      #       The caller can list one or more issuer identifiers which identified the issuers for
+      #       which data should be returned.
+      #   `fund_identifier_list` (array[string] | empty)
+      #       This parameter is used to limit the results to a specific set of issuers.
+      #       The caller can list one or more issuer identifiers which identified the issuers
+      #       for which data should be returned.
 
       def initialize(client_id, secret_key)
         super(client_id, secret_key)
@@ -82,20 +95,6 @@ module Msci
         @factor_name_list = []
         @category_path_list = []
         @product_name_list = []
-      end
-
-      def clear_params
-        @factor_name_list = nil
-        @category_path_list = nil
-        @product_name_list = nil
-        @index_identifier_list = nil
-        @esg_industry_id_list = nil
-        @gics_subindustry_id_list = nil
-        @country_code_list = nil
-        @fund_lipper_global_class_list = nil
-        @fund_domicile_list = nil
-        @fund_asset_universe_list = nil
-        @fund_asset_class_list = nil
       end
 
       # FUNCTION - issuers()
@@ -113,27 +112,13 @@ module Msci
       #   `reference_column_list` = nil
       #   `issuer_identifier_type` = nil
       # Optional params:
-      #   `name_contains` (string | nil)
-      #       The name_matches string is used to locate issuers whose primary issuer name value contains the given string anywhere in the name.
-      #   `starts_with` (string | nil)
-      #       Limit the primary issuer to a name that starts with the specified value.
-      #   `issuer_identifier_list` (array[string] | empty)
-      #       This parameter is used to limit the results to a specific set of issuers. 
-      #       The caller can list one or more issuer identifiers which identified the issuers for 
-      #       which data should be returned.
       #   `offset` (int32 | 0)
       #       The Data API has the potential to generate large amounts of data.
       #       The offset value indicates which record to start retrieving values.
       #   `limit` (int32 | 100)
       #       The Data API has the potential to generate large amounts of data.
       #       The limit value indicates the maximum number of records to return
-      def issuers(
-        name_contains: nil,
-        starts_with: nil,
-        issuer_identifier_list: [],
-        offset: 0,
-        limit: 100
-      )
+      def issuers(offset: 0, limit: 100)
         params = {
           "format" => "json",
           "coverage" => "esg_ratings",
@@ -141,18 +126,14 @@ module Msci
           "offset" => offset.to_i,
           "limit" => limit.to_i,
         }
-        params["name_contains"] = name_contains unless name_contains.nil?
-        params["starts_with"] = starts_with unless starts_with.nil?
-        params["issuer_identifier_list"] = issuer_identifier_list unless issuer_identifier_list.empty?
         params = params.merge(_check_params)
 
-        request = Msci::Esg::Request.get(
-          get_full_path(@api_path, "/issuers", params),
-          @token
-        )
+        uri = get_full_path(@api_path, "/issuers")
+        request = Msci::Esg::Request.post(uri, params, @token)
         result = get_result(request)
         return [] if result["issuers"].nil?
 
+        _clear_params
         result["issuers"]
       end
 
@@ -169,66 +150,68 @@ module Msci
       #   `fund_metrics_coverage_only` = "true"
       #   `fund_identifier_type` = nil
       # Optional params:
-      #   `name_contains` (string | nil)
-      #       The name_matches string is used to locate issuers whose primary issuer name value contains the given string anywhere in the name.
-      #   `starts_with` (string | nil)
-      #       Limit the primary issuer to a name that starts with the specified value.
-      #   `fund_identifier_list` (array[string] | empty)
-      #       This parameter is used to limit the results to a specific set of issuers. 
-      #       The caller can list one or more issuer identifiers which identified the issuers 
-      #       for which data should be returned.
       #   `offset` (int32 | 0)
       #       The Data API has the potential to generate large amounts of data.
       #       The offset value indicates which record to start retrieving values.
       #   `limit` (int32 | 100)
       #       The Data API has the potential to generate large amounts of data.
       #       The limit value indicates the maximum number of records to return
-      def funds(
-        name_contains: nil,
-        starts_with: nil,
-        fund_identifier_list: [],
-        offset: 0,
-        limit: 100
-      )
+      def funds(offset: 0, limit: 100)
         params = {
           "format" => "json",
           "fund_metrics_coverage_only" => true,
           "offset" => offset.to_i,
           "limit" => limit.to_i,
         }
-        params["name_contains"] = name_contains unless name_contains.nil?
-        params["starts_with"] = starts_with unless starts_with.nil?
-        params["fund_identifier_list"] = fund_identifier_list unless fund_identifier_list.empty?
         params = params.merge(_check_params)
 
-        request = Msci::Esg::Request.get(
-          get_full_path(@api_path, "/funds", params),
-          @token
-        )
+        uri = get_full_path(@api_path, "/funds")
+        request = Msci::Esg::Request.post(uri, params, @token)
         result = get_result(request)
         return [] if result["funds"].nil?
 
+        _clear_params
         result["funds"]
       end
 
       private
 
       def _check_params
-        params = {}
-        params["index_identifier_list"] = @index_identifier_list unless @index_identifier_list.nil?
-        params["esg_industry_id_list"] = @esg_industry_id_list unless @esg_industry_id_list.nil?
-        params["gics_subindustry_id_list"] = @gics_subindustry_id_list unless @gics_subindustry_id_list.nil?
-        params["country_code_list"] = @country_code_list unless @country_code_list.nil?
+        {
+          "index_identifier_list" => @index_identifier_list,
+          "esg_industry_id_list" => @esg_industry_id_list,
+          "gics_subindustry_id_list" => @gics_subindustry_id_list,
+          "country_code_list" => @country_code_list,
+          "issuer_identifier_list" => @issuer_identifier_list,
+          "fund_lipper_global_class_list" => @fund_lipper_global_class_list,
+          "fund_domicile_list" => @fund_domicile_list,
+          "fund_asset_universe_list" => @fund_asset_universe_list,
+          "fund_asset_class_list" => @fund_asset_class_list,
+          "fund_identifier_list" => @fund_identifier_list,
+          "factor_name_list" => @factor_name_list,
+          "category_path_list" => @category_path_list,
+          "product_name_list" => @product_name_list,
+          "name_contains" => @name_contains,
+          "starts_with" => @starts_with,
+        }
+      end
 
-        params["fund_lipper_global_class_list"] = @fund_lipper_global_class_list unless @fund_lipper_global_class_list.nil?
-        params["fund_domicile_list"] = @fund_domicile_list unless @fund_domicile_list.nil?
-        params["fund_asset_universe_list"] = @fund_asset_universe_list unless @fund_asset_universe_list.nil?
-        params["fund_asset_class_list"] = @fund_asset_class_list unless @fund_asset_class_list.nil?
-
-        params["factor_name_list"] = @factor_name_list unless @factor_name_list.nil?
-        params["category_path_list"] = @category_path_list unless @category_path_list.nil?
-        params["product_name_list"] = @product_name_list unless @product_name_list.nil?
-        params
+      def _clear_params
+        @factor_name_list = nil
+        @category_path_list = nil
+        @product_name_list = nil
+        @index_identifier_list = nil
+        @esg_industry_id_list = nil
+        @gics_subindustry_id_list = nil
+        @country_code_list = nil
+        @issuer_identifier_list = nil
+        @fund_lipper_global_class_list = nil
+        @fund_domicile_list = nil
+        @fund_asset_universe_list = nil
+        @fund_asset_class_list = nil
+        @fund_identifier_list = nil
+        @name_contains = nil
+        @starts_with = nil
       end
     end
   end

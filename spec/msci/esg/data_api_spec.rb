@@ -2,7 +2,10 @@
 
 RSpec.describe Msci::Esg::DataAPI do
   before :all do
-    @api = Msci::Esg::DataAPI.new(ENV["MSCI_API_CLIENT_ID"], ENV["MSCI_API_SECRET_ID"])
+    @api = Msci::Esg::DataAPI.new(
+      ENV.fetch("MSCI_API_CLIENT_ID", nil),
+      ENV.fetch("MSCI_API_SECRET_ID", nil)
+    )
     expect(@api.auth).to be true
   end
 
@@ -189,16 +192,16 @@ RSpec.describe Msci::Esg::DataAPI do
     end
 
     context "Issuers general filters" do
-      before { @api.clear_params }
-
       it "get list with issuers with name contains `Bank`" do
-        issuers = @api.issuers(name_contains: "BANK")
+        @api.name_contains = "BANK"
+        issuers = @api.issuers
         expect(issuers).to be_a(Array)
         expect(issuers.size).to be >= 0
       end
 
       it "get list with issuers with name starts with `Bank`" do
-        issuers = @api.issuers(starts_with: "BANK")
+        @api.starts_with = "BANK"
+        issuers = @api.issuers
         expect(issuers).to be_a(Array)
         expect(issuers.size).to be >= 0
       end
@@ -208,7 +211,8 @@ RSpec.describe Msci::Esg::DataAPI do
         expect(issuers).to be_a(Array)
         expect(issuers.size).to be >= 0
         unless issuers.empty?
-          issuers_with_id = @api.issuers(issuer_identifier_list: [issuers[0]["ISSUERID"]])
+          @api.issuer_identifier_list = [issuers[0]["ISSUERID"]]
+          issuers_with_id = @api.issuers
           expect(issuers_with_id).to be_a(Array)
           expect(issuers_with_id.size).to be > 0
         end
@@ -216,8 +220,6 @@ RSpec.describe Msci::Esg::DataAPI do
     end
 
     context "Issuers external filters" do
-      before { @api.clear_params }
-
       it "get list with issuers with some index_identifier_list" do
         @api.index_identifier_list = %w[UNX000000020611598 MSC000000000990100]
         issuers = @api.issuers
@@ -274,8 +276,6 @@ RSpec.describe Msci::Esg::DataAPI do
     end
 
     context "Issuers fields" do
-      before { @api.clear_params }
-
       it "get list with issuers with some factor_name_list" do
         @api.factor_name_list = ["BARCAP"]
         issuers = @api.issuers
@@ -307,16 +307,16 @@ RSpec.describe Msci::Esg::DataAPI do
     end
 
     context "Funds general filters" do
-      before { @api.clear_params }
-
       it "get list with funds with name contains `Bank`" do
-        funds = @api.funds(name_contains: "BANK")
+        @api.name_contains = "BANK"
+        funds = @api.funds
         expect(funds).to be_a(Array)
         expect(funds.size).to be >= 0
       end
 
       it "get list with funds with name starts with `Bank`" do
-        funds = @api.funds(starts_with: "BANK")
+        @api.starts_with = "BANK"
+        funds = @api.funds
         expect(funds).to be_a(Array)
         expect(funds.size).to be >= 0
       end
@@ -326,7 +326,8 @@ RSpec.describe Msci::Esg::DataAPI do
         expect(funds).to be_a(Array)
         expect(funds.size).to be >= 0
         unless funds.empty?
-          funds_with_id = @api.funds(fund_identifier_list: [funds[0]["FUND_ID"]])
+          @api.fund_identifier_list = [funds[0]["FUND_ID"]]
+          funds_with_id = @api.funds
           expect(funds_with_id).to be_a(Array)
           expect(funds_with_id.size).to be > 0
         end
@@ -334,8 +335,6 @@ RSpec.describe Msci::Esg::DataAPI do
     end
 
     context "Funds external filters" do
-      before { @api.clear_params }
-
       it "get list with funds with some fund_lipper_global_class_list" do
         @api.fund_lipper_global_class_list = %w[Unclassified]
         funds = @api.funds
@@ -392,8 +391,6 @@ RSpec.describe Msci::Esg::DataAPI do
     end
 
     context "Funds fields" do
-      before { @api.clear_params }
-
       it "get list with funds with some factor_name_list" do
         @api.factor_name_list = ["HOLDING_DATE"]
         funds = @api.funds

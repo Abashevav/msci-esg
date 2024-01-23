@@ -8,7 +8,10 @@ RSpec.describe Msci::Esg do
     end
 
     it "true auth" do
-      base = Msci::Esg::BaseAPI.new(ENV["MSCI_API_CLIENT_ID"], ENV["MSCI_API_SECRET_ID"])
+      base = Msci::Esg::BaseAPI.new(
+        ENV.fetch("MSCI_API_CLIENT_ID", nil),
+        ENV.fetch("MSCI_API_SECRET_ID", nil)
+      )
       expect(base.auth).to be true
     end
   end

@@ -13,16 +13,9 @@ module Msci
       class << self
         def get_expired_date(expires_in)
           date_now = DateTime.now
-          days = Msci::Esg::Date.get_days(expires_in)
-          hours = Msci::Esg::Date.get_hours(expires_in, days)
-          mins = Msci::Esg::Date.get_minutes(expires_in, days, hours)
-          sec = Msci::Esg::Date.get_seconds(expires_in, days, hours, mins)
+          vars = _prepare_all_variables(expires_in)
 
-          DateTime.new(
-            date_now.year, date_now.month, (date_now.day + days),
-            (date_now.hour + hours), (date_now.min + mins), (date_now.sec + sec),
-            date_now.offset
-          )
+          _create_expired_date(date_now, vars)
         end
 
         def get_days(seconds)
@@ -39,6 +32,26 @@ module Msci
 
         def get_seconds(seconds, days = 0, hours = 0, mins = 0)
           (seconds - (days * SEC_BY_DAY) - (hours * SEC_BY_HOUR) - (mins * SEC_BY_MIN)).round
+        end
+
+        def _prepare_all_variables(seconds)
+          days = Msci::Esg::Date.get_days(seconds)
+          hours = Msci::Esg::Date.get_hours(seconds, days)
+          mins = Msci::Esg::Date.get_minutes(seconds, days, hours)
+          sec = Msci::Esg::Date.get_seconds(seconds, days, hours, mins)
+
+          { days: days, hours: hours, mins: mins, sec: sec }
+        end
+
+        def _create_expired_date(date_now, vars)
+          DateTime.new(
+            date_now.year, date_now.month,
+            date_now.day + vars[:days],
+            date_now.hour + vars[:hours],
+            date_now.min + vars[:mins],
+            date_now.sec + vars[:sec],
+            date_now.offset
+          )
         end
       end
     end
