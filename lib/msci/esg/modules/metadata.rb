@@ -13,7 +13,7 @@ module Msci
       #
       # PARAMS
       #
-      # `factor_type` (string | "all")
+      # `factor_type` (string | "all" [issuer | fund])
       # Factor Type is an optional value which will restrict the return factors to the specified type.
       # If this option is not specified, all factor types will be returned.
       # Available options are issuer, fund, and all. Note the options that are available are based on user permissions.
@@ -33,7 +33,12 @@ module Msci
       # ESG Data Factors are organized into a hierarchy of categories.
       # Category Paths are used to located a group of factors that belong to the specified path(s). Add string item
       #
-      def metadata_factors(factor_type = "all", factor_name_list = [], product_name_list = [], category_path_list = [])
+      def metadata_factors(
+        factor_type: "all",
+        factor_name_list: [],
+        product_name_list: [],
+        category_path_list: []
+      )
         params = {}
         params["factor_name_list"] = factor_name_list unless factor_name_list.empty?
         params["factor_type"] = factor_type unless factor_type.nil?

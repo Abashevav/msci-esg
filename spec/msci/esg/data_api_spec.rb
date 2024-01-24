@@ -149,35 +149,35 @@ RSpec.describe Msci::Esg::DataAPI do
     end
 
     it "get list metadata related to single factor type" do
-      mf = @api.metadata_factors("fund")
+      mf = @api.metadata_factors(factor_type: "fund")
       expect(mf).to be_a(Array)
       expect(mf.size).to be >= 0
     end
 
     it "get list metadata related to some data factors" do
-      mf = @api.metadata_factors("all", %w[ABORTION_ALL_TIE FUND_ESG_COVERAGE])
+      mf = @api.metadata_factors(factor_name_list: %w[ABORTION_ALL_TIE FUND_ESG_COVERAGE])
       expect(mf).to be_a(Array)
       expect(mf.size).to be >= 0
     end
 
     it "get list metadata related to some product name list" do
-      mf = @api.metadata_factors("all", [], ["Fund Free Access"])
+      mf = @api.metadata_factors(product_name_list: ["Fund Free Access"])
       expect(mf).to be_a(Array)
       expect(mf.size).to be >= 0
     end
 
     it "get list metadata related to some category path list" do
-      mf = @api.metadata_factors("all", [], [], ["Fund Metrics:Summary"])
+      mf = @api.metadata_factors(category_path_list: ["Fund Metrics:Summary"])
       expect(mf).to be_a(Array)
       expect(mf.size).to be >= 0
     end
 
     it "get list metadata with each params" do
       mf = @api.metadata_factors(
-        "all",
-        %w[ABORTION_ALL_TIE FUND_ESG_COVERAGE],
-        ["Fund Free Access"],
-        ["Fund Metrics:Summary"]
+        factor_type: "all",
+        factor_name_list: %w[ABORTION_ALL_TIE FUND_ESG_COVERAGE],
+        product_name_list: ["Fund Free Access"],
+        category_path_list: ["Fund Metrics:Summary"]
       )
       expect(mf).to be_a(Array)
       expect(mf.size).to be >= 0
