@@ -2,6 +2,7 @@
 
 require "json"
 require "cgi"
+require "date"
 
 module Msci
   # this module will be work with all MSCI ESG solution
@@ -34,7 +35,7 @@ module Msci
 
         if response["access_token"]
           @token = response["access_token"]
-          @expires_in = Msci::Esg::Date.get_expired_date(response["expires_in"])
+          @expires_in = DateTime.now + Rational(response["expires_in"].to_i, 86400)
           @token_type = response["token_type"]
         end
 
