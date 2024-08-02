@@ -12,7 +12,7 @@ Gem::Specification.new do |spec|
   spec.description = "The ESG Data API provides access to over 4,000 ESG data points, including ratings and raw data."
   spec.homepage = "https://github.com/Abashevav/msci-esg"
   spec.license = "MIT"
-  spec.required_ruby_version = ">= 2.5.9"
+  spec.required_ruby_version = ">= 2.7.8"
 
   spec.metadata["allowed_push_host"] = "https://github.com/Abashevav/msci-esg"
 

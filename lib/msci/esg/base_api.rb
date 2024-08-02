@@ -35,7 +35,7 @@ module Msci
 
         if response["access_token"]
           @token = response["access_token"]
-          @expires_in = DateTime.now + Rational(response["expires_in"].to_i, 86400)
+          @expires_in = DateTime.now + Rational(response["expires_in"].to_i, 86_400)
           @token_type = response["token_type"]
         end
 
