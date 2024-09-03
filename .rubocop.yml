@@ -1,5 +1,5 @@
 AllCops:
-  TargetRubyVersion: 2.7.X
+  TargetRubyVersion: 2.5.X
   NewCops: enable
 
 Style/StringLiterals:
@@ -27,6 +27,7 @@ Metrics/MethodLength:
 
 Metrics/AbcSize:
   CountRepeatedAttributes: false
+  Max: 25
 
 Metrics/ParameterLists:
   MaxOptionalParameters: 5

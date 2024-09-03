@@ -88,7 +88,7 @@ module Msci
       #       for which data should be returned.
 
       def initialize(client_id, secret_key)
-        super(client_id, secret_key)
+        super
         @audience = "https://esg/data"
         @api_path = BASE_PATH + "/".to_s + API_VERSION
 

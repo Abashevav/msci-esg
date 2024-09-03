@@ -12,7 +12,7 @@ module Msci
       BASE_PATH = "https://api.msci.com/esg/report"
 
       def initialize(client_id, secret_key)
-        super(client_id, secret_key)
+        super
         @audience = "https://esg/report"
       end
 
