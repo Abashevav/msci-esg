@@ -22,7 +22,7 @@ module Msci
           https.request(req)
         rescue Net::OpenTimeout => e
           puts "TRY #{retries}/n ERROR: timed out while trying to connect #{e}"
-          sleep(10)
+          sleep(60)
           raise e if retries <= 1
 
           post(uri, body, token, retries - 1)
@@ -40,7 +40,7 @@ module Msci
           https.request(req)
         rescue Net::OpenTimeout => e
           puts "TRY #{retries}/n ERROR: timed out while trying to connect #{e}"
-          sleep(10)
+          sleep(60)
           raise e if retries <= 1
 
           get(uri, token, retries - 1)
