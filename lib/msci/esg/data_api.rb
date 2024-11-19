@@ -17,7 +17,7 @@ module Msci
       attr_accessor :api_path, :factor_name_list, :category_path_list, :product_name_list
       attr_accessor :index_identifier_list, :esg_industry_id_list, :gics_subindustry_id_list, :country_code_list
       attr_accessor :fund_lipper_global_class_list, :fund_domicile_list, :fund_asset_universe_list, :fund_asset_class_list
-      attr_accessor :issuer_identifier_list, :fund_identifier_list, :name_contains, :starts_with
+      attr_accessor :issuer_identifier_list, :fund_identifier_list, :name_contains, :starts_with, :coverage
 
       # External parameters
       #   `product_name_list`  (array[string] | empty)
@@ -107,7 +107,6 @@ module Msci
       #
       # Default params:
       #   `format` = "json"
-      #   `coverage` = "esg_ratings"
       #   `parent_child` = "do_not_apply"
       #   `reference_column_list` = nil
       #   `issuer_identifier_type` = nil
@@ -121,7 +120,6 @@ module Msci
       def issuers(offset: 0, limit: 100)
         params = {
           "format" => "json",
-          "coverage" => "esg_ratings",
           "parent_child" => "do_not_apply",
           "offset" => offset.to_i,
           "limit" => limit.to_i,
@@ -193,6 +191,7 @@ module Msci
           "product_name_list" => @product_name_list,
           "name_contains" => @name_contains,
           "starts_with" => @starts_with,
+          "coverage" => @coverage,
         }
       end
 
@@ -212,6 +211,7 @@ module Msci
         @fund_identifier_list = nil
         @name_contains = nil
         @starts_with = nil
+        @coverage = nil
       end
     end
   end
