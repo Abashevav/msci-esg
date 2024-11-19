@@ -95,6 +95,8 @@ module Msci
         @factor_name_list = []
         @category_path_list = []
         @product_name_list = []
+
+        @coverage = "esg_ratings"
       end
 
       # FUNCTION - issuers()
@@ -211,7 +213,7 @@ module Msci
         @fund_identifier_list = nil
         @name_contains = nil
         @starts_with = nil
-        @coverage = nil
+        @coverage = "esg_ratings"
       end
     end
   end
