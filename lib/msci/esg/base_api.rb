@@ -13,6 +13,7 @@ module Msci
     class BaseAPI
       AUTH_PATH = "https://accounts.msci.com/oauth/token"
       attr_accessor :token, :audience, :expires_in, :token_type, :client_id, :secret_key
+      attr_accessor :last_request_paging, :last_request_messages, :last_request_status, :last_request_code, :last_request_trace_id
 
       def initialize(client_id, secret_key)
         @client_id = client_id
@@ -42,11 +43,17 @@ module Msci
         true
       end
 
-      def get_result(request)
+      def get_result(request) # rubocop:disable Metrics/CyclomaticComplexity
         return nil if request.nil?
 
         response = JSON.parse(request.body)
         return nil if response["result"].nil?
+
+        @last_request_code = response["code"] || nil
+        @last_request_status = response["status"] || nil
+        @last_request_paging = response["paging"] || nil
+        @last_request_trace_id = response["trace_id"] || nil
+        @last_request_messages = response["messages"] || nil
 
         response["result"]
       end
