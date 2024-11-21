@@ -26,9 +26,9 @@ module Msci
           raise e if retries <= 1
 
           post(path, body, token, retries - 1)
-        rescue Net::OpenTimeout => e
-          puts "TRY #{retries} >> ERROR: timed out while trying to connect #{e}"
-          sleep(60)
+        rescue StandardError => e
+          puts "TRY #{retries} >> ERROR: StandardError - #{e}"
+          sleep(120)
           raise e if retries <= 1
 
           post(path, body, token, retries - 1)
@@ -50,9 +50,9 @@ module Msci
           raise e if retries <= 1
 
           get(path, token, retries - 1)
-        rescue Net::OpenTimeout => e
-          puts "TRY #{retries} >> ERROR: timed out while trying to connect #{e}"
-          sleep(60)
+        rescue StandardError => e
+          puts "TRY #{retries} >> ERROR: StandardError - #{e}"
+          sleep(120)
           raise e if retries <= 1
 
           get(path, token, retries - 1)
